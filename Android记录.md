@@ -276,11 +276,158 @@ sp: scaled pixels(放大像素). 主要用于字体显示best for textsize。也
 
 
 
+##6、基于监听的事件处理机制
+
+###6.1、监听器
+1、直接使用匿名内部类：也就是setXxxListener后，重写里面的方法，通常是临时使用一次，复用性不高
+
+	 
+	import android.os.Bundle;    
+	import android.view.View;    
+	import android.view.View.OnClickListener;    
+	import android.widget.Button;    
+	import android.widget.Toast;    
+	import android.app.Activity;    
 
 
+	public class MainActivity extends Activity {    
+    private Button btnshow;    
+
+    @Override    
+    protected void onCreate(Bundle savedInstanceState) {    
+        super.onCreate(savedInstanceState);    
+        setContentView(R.layout.activity_main);    
+        btnshow = (Button) findViewById(R.id.btnshow);    
+        btnshow.setOnClickListener(new OnClickListener() {    
+            //重写点击事件的处理方法onClick()    
+            @Override    
+            public void onClick(View v) {    
+                //显示Toast信息    
+                Toast.makeText(getApplicationContext(), "你点击了按钮", Toast.LENGTH_SHORT).show();    
+            }    
+        });    
+    }        
+	}    
+
+2、使用内部类：
+
+	import android.os.Bundle;    
+	import android.view.View;    
+	import android.view.View.OnClickListener;    
+	import android.widget.Button;    
+	import android.widget.Toast;    
+	import android.app.Activity;    
 
 
+	public class MainActivity extends Activity {    
+    private Button btnshow;    
+    @Override    
+    protected void onCreate(Bundle savedInstanceState) {    
+        super.onCreate(savedInstanceState);    
+        setContentView(R.layout.activity_main);    
+        btnshow = (Button) findViewById(R.id.btnshow);    
+        //直接new一个内部类对象作为参数    
+        btnshow.setOnClickListener(new BtnClickListener());    
+    }     
+    //定义一个内部类,实现View.OnClickListener接口,并重写onClick()方法    
+    class BtnClickListener implements View.OnClickListener    
+    {    
+        @Override    
+        public void onClick(View v) {    
+            Toast.makeText(getApplicationContext(), "按钮被点击了", Toast.LENGTH_SHORT).show();   
+        }    
+    }    
+	}  
 
+3、使用外部类
+MyClick.java	
+
+	import android.view.View;    
+	import android.view.View.OnClickListener;    
+	import android.widget.TextView;    
+
+	public class MyClick implements OnClickListener {    
+    	private TextView textshow;    
+    //把文本框作为参数传入    
+    public MyClick(TextView txt)    
+    {    
+        textshow = txt;    
+    }    
+    @Override    
+    public void onClick(View v) {    
+        //点击后设置文本框显示的文字    
+        textshow.setText("点击了按钮!");    
+    }    
+	}    
+
+
+MainActivity.java
+
+	import android.os.Bundle;    
+	import android.widget.Button;    
+	import android.widget.TextView;    
+	import android.app.Activity;    
+
+
+	public class MainActivity extends Activity {    
+    private Button btnshow;    
+    private TextView txtshow;    
+    @Override    
+    protected void onCreate(Bundle savedInstanceState) {    
+        super.onCreate(savedInstanceState);    
+        setContentView(R.layout.activity_main);    
+        btnshow = (Button) findViewById(R.id.btnshow);    
+        txtshow = (TextView) findViewById(R.id.textshow);    
+        //直接new一个外部类，并把TextView作为参数传入    
+        btnshow.setOnClickListener(new MyClick(txtshow));    
+    }         
+	}    
+
+4、直接使用Activity作为事件监听器
+
+只需要让Activity类实现XxxListener事件监听接口，在Activity中定义重写对应的事件处理器方法 
+eg:Actitity实现了OnClickListener接口,重写了onClick(view)方法在为某些组建添加该事件监听对象 
+时,直接setXxx.Listener(this)即可
+
+	import android.os.Bundle;    
+	import android.view.View;    
+	import android.view.View.OnClickListener;    
+	import android.widget.Button;    
+	import android.widget.Toast;    
+	import android.app.Activity;    
+
+	//让Activity方法实现OnClickListener接口    
+	public class MainActivity extends Activity implements OnClickListener{    
+    private Button btnshow;    
+    @Override    
+    protected void onCreate(Bundle savedInstanceState) {    
+        super.onCreate(savedInstanceState);    
+        setContentView(R.layout.activity_main);    
+
+        btnshow = (Button) findViewById(R.id.btnshow);    
+        //直接写个this    
+        btnshow.setOnClickListener(this);    
+    }    
+    //重写接口中的抽象方法    
+    @Override    
+    public void onClick(View v) {    
+        Toast.makeText(getApplicationContext(), "点击了按钮", Toast.LENGTH_SHORT).show();         
+    }         
+	}    
+
+5、直接绑定到标签：onClick
+
+------
+
+###6.2、基于回调的事件处理机制
+①在该组件上触发屏幕事件: boolean onTouchEvent(MotionEvent event); 
+②在该组件上按下某个按钮时: boolean onKeyDown(int keyCode,KeyEvent event); 
+③松开组件上的某个按钮时: boolean onKeyUp(int keyCode,KeyEvent event); 
+④长按组件某个按钮时: boolean onKeyLongPress(int keyCode,KeyEvent event); 
+⑤键盘快捷键事件发生: boolean onKeyShortcut(int keyCode,KeyEvent event); 
+⑥在组件上触发轨迹球屏事件: boolean onTrackballEvent(MotionEvent event); 
+*⑦当组件的焦点发生改变,和前面的6个不同,这个方法只能够在View中重写哦！ 
+protected void onFocusChanged(boolean gainFocus, int direction, Rect previously FocusedRect)
 
 
 
