@@ -420,21 +420,34 @@ eg:Actitity实现了OnClickListener接口,重写了onClick(view)方法在为某�
 ------
 
 ###6.2、基于回调的事件处理机制
+####什么是方法回调！！要我用自己的话说，我真说不出来！！！！
+引用：是将功能定义与功能分开的一种手段，一种解耦的设计思想，在java中回调是通过接口来实现的，作为一种系统的构架，必须要有自己的运行环境，并且需要为用户提供实现接口；实现依赖于客户，这样就可以达到接口统一，实现不同，系统通过在不同的状态下 回调 我们的实现类，从而达到接口和实现的分离！
+
+
+####android为GUI组件提供了一些事件处理的回调方法，如下：
+
 ①在该组件上触发屏幕事件: boolean onTouchEvent(MotionEvent event); 
 ②在该组件上按下某个按钮时: boolean onKeyDown(int keyCode,KeyEvent event); 
 ③松开组件上的某个按钮时: boolean onKeyUp(int keyCode,KeyEvent event); 
 ④长按组件某个按钮时: boolean onKeyLongPress(int keyCode,KeyEvent event); 
 ⑤键盘快捷键事件发生: boolean onKeyShortcut(int keyCode,KeyEvent event); 
 ⑥在组件上触发轨迹球屏事件: boolean onTrackballEvent(MotionEvent event); 
-*⑦当组件的焦点发生改变,和前面的6个不同,这个方法只能够在View中重写哦！ 
+⑦当组件的焦点发生改变,和前面的6个不同,这个方法只能够在View中重写哦！ 
 protected void onFocusChanged(boolean gainFocus, int direction, Rect previously FocusedRect)
 
+####仔细查看，会发现回调方法返回的值是boolean类型！！！
+为啥呢？
+
+返回的是boolean类型，这个返回值是用来标识这个方法是否完全处理完，如果为false就说明没有处理完，然后呢，就会传播出去，触发组件所在的Activity的相关的回调方法，返回值要是true的话就不会传播了！！
+
+然后记住他的传播顺序是：
+
+监听器---->View组件的回调方法--->Activity的回调方法
 
 
-
-
-
-
+----
+##7、Handler消息传递机制
+其实我以前刚开始学习的时候全部都放在主Activity中，但是，这样很容易出现问题的，后来才知道，原来不允许我们在UI外操作UI；然后我们就需要做页面刷新的时候通过Handler来通知UI组件更新
 
 
 
