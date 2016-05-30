@@ -449,6 +449,72 @@ protected void onFocusChanged(boolean gainFocus, int direction, Rect previously 
 ##7、Handler消息传递机制
 其实我以前刚开始学习的时候全部都放在主Activity中，但是，这样很容易出现问题的，后来才知道，原来不允许我们在UI外操作UI；然后我们就需要做页面刷新的时候通过Handler来通知UI组件更新
 
+----
+##8、Adapter
+
+###8.1MVC模式
+Model：通常可以理解为数据，负责执行程序的核心运算和判断逻辑，通过view获得用户输入的数据，然后根据从数据库查询相关的信息，最后进行运算和判断，再将得到的结果交给view来显示
+
+View:用户的操作接口，说白了就是GUI，应该使用哪种接口组件，组件间的排列位置和顺序都需要设计
+
+Controller:控制器，作为model和view之间的枢纽，负责控制程序的执行流程以及对象之间的一个互动
+
+而Adapter就是中间的这个Controller的部分
+
+###8.2
+
+1、了解Adapter的继承关系，
+2、掌握这个几个重要的Adapter
+
+BaseAdapter:抽象类，实际的开发中我们会继承这个类并且重写相关的方法，是用得最多的一个Adapter!
+
+ArrayAdapter:支持泛型操作，最简单的一个Adapter，只能展示一行文字
+
+SimpleAdapter:同样具有良好的扩展性的一个Adapter，可以自定义多种效果
+
+###8.3编码
+1、经典的Item的设计（以后只要用就从这里粘就好了）
+
+    <?xml version="1.0" encoding="utf-8"?>
+	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+
+
+    <ImageView
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:src="@drawable/mishu" />
+
+    	<LinearLayout
+        	android:layout_width="match_parent"
+        	android:layout_height="wrap_content"
+        	android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dp"
+            android:layout_marginTop="5dp"
+            android:text="小明"
+            android:textColor="#1D1D1C"
+            android:textSize="20sp" />
+
+       	 <TextView
+            android:id="@+id/says"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:layout_marginLeft="5dp"
+            android:text="我是一个努力的孩子"
+            android:textColor="#B4B4B9"
+            android:textSize="14sp" />
+
+    	</LinearLayout>
+	</LinearLayout>
+
 
 
 
