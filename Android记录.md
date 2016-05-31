@@ -473,7 +473,38 @@ ArrayAdapter:支持泛型操作，最简单的一个Adapter，只能展示一行
 SimpleAdapter:同样具有良好的扩展性的一个Adapter，可以自定义多种效果
 
 ###8.3编码
-1、经典的Item的设计（以后只要用就从这里粘就好了）
+1、ArrayAdapter使用的示例：
+	
+	public class MainActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        //要显示的数据
+        String[] strs = {"基神","B神","翔神","曹神","J神"};
+        //创建ArrayAdapter
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>
+                (this,android.R.layout.simple_expandable_list_item_1,strs);
+        //获取ListView对象，通过调用setAdapter方法为ListView设置Adapter设置适配器
+        ListView list_test = (ListView) findViewById(R.id.list_test);
+        list_test.setAdapter(adapter);
+    }
+	}
+
+ArrayAdapter要传3个参数：
+1，content
+2，资源ID，用来作为ArrayAdapter的列表项组件
+3，数组或者是List,用来提供数据
+
+----
+
+2、SimpleAdapter：简单的Adapter，功能很强大，实现带头像的列表布局
+
+
+list_item.xml
+
+经典的Item的设计（以后只要用就从这里粘就好了）
 
     <?xml version="1.0" encoding="utf-8"?>
 	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -517,7 +548,53 @@ SimpleAdapter:同样具有良好的扩展性的一个Adapter，可以自定义�
 
 
 
+MainActivity.java
 
+	public class MainActivity extends AppCompatActivity {
+
+    private String [] name = {"哈哈哈","么么么","嘻嘻嘻"};
+    private String [] content = {"我是哈哈哈哈哈","我是么么么","我是嘻嘻嘻"};
+    private int [] imageId = {R.drawable.haha,R.drawable.haha,R.drawable.haha};
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+	//        ListView listView = (ListView) findViewById(R.id.list1);
+	//        String [] arr = {"哈哈哈","嘻嘻嘻","么么么么"};
+	//        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,R.layout.array_item,arr);
+	//        listView.setAdapter(adapter);
+
+        List<Map<String, Object>> listItems = new ArrayList<>();
+        for (int i = 0; i<name.length; i++){
+            Map<String, Object> listItem = new HashMap<>();
+            listItem.put("name",name[i]);
+            listItem.put("image",imageId[i]);
+            listItem.put("content",content[i]);
+            listItems.add(listItem);
+        }
+
+        SimpleAdapter simpleAdapter = new SimpleAdapter(this,listItems,R.layout.list_item,
+                new String []{"name","image","content"},
+                new int []{R.id.tv_name,R.id.image,R.id.tv_content});
+        ListView listView = (ListView) findViewById(R.id.list1);
+        listView.setAdapter(simpleAdapter);
+
+        
+        //每个列表项别点击的监听器
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Toast.makeText(MainActivity.this,name[position]+"被点击了",Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+
+
+3、自定义BaseAdapter，然后绑定到ListView的简单的例子
+
+先不写了，！！
 
 
 
