@@ -598,13 +598,439 @@ MainActivity.java
 
 
 
+-----------
+
+##Android数据存储
+
+自己想一想，android中进行数据的存储的几种方式
+1，文件存储
+2，SharedPreferences
+3,SQLite数据库
+
+###文件读写
+1、存储到APP中，效果图如下
+
+![](http://i.imgur.com/rXcL2Ne.png)
+
+
+activity_main.xml
+
+	<?xml version="1.0" encoding="utf-8"?>
+	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:orientation="vertical"
+    tools:context="zzu.com.wenjianduixie.MainActivity">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="请输入文件名" />
+
+    <EditText
+        android:id="@+id/et_filename"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="请输入文件内容" />
+
+    <EditText
+        android:id="@+id/et_filecontent"
+        android:lines="3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        >
+        <Button
+            android:id="@+id/btn_save"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="写入"
+            />
+        <Button
+            android:id="@+id/btn_clean"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="清空"
+            />
+
+        <Button
+            android:id="@+id/btn_read"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="读取"
+            />
+
+    </LinearLayout>
+	</LinearLayout>
+
+
+FileHelper.java
+
+	package zzu.com.wenjianduixie;
+
+	import android.content.Context;
+
+	import java.io.FileInputStream;
+	import java.io.FileOutputStream;
+	import java.io.IOException;
+
+	/**
+	 * Created by xm on 2016/6/1.
+	 */
+
+	//这是一个读写文件的辅助类
+	public class FileHelper {
+    private Context mContext;
+    public FileHelper() {
+    }
+    public FileHelper(Context mContext) {
+        this.mContext = mContext;
+    }
+    /*
+    	* 这里定义的是一个文件保存的方法，写入到文件中，所以是输出流
+    	* */
+    public void save(String filename, String filecontent) throws Exception {
+        //这里我们使用私有模式,创建出来的文件只能被本应用访问,还会覆盖原文件哦
+        FileOutputStream output = mContext.openFileOutput(filename,Context.MODE_PRIVATE);
+        output.write(filecontent.getBytes());  //将String字符串以字节流的形式写入到输出流中
+        output.close();         //关闭输出流
+    }
+
+
+    // 这里定义的是文件读取的方法
+
+    public String read(String filename) throws IOException {
+        //打开文件输入流
+        FileInputStream input = mContext.openFileInput(filename);
+        byte[] temp = new byte[1024];
+        StringBuilder sb = new StringBuilder("");
+        int len = 0;
+        //读取文件内容:
+        while ((len = input.read(temp)) > 0) {
+            sb.append(new String(temp, 0, len));
+        }
+        //关闭输入流
+        input.close();
+        return sb.toString();
+    }
+
+	}
 
 
 
+MainActivity.java
+
+	package zzu.com.wenjianduixie;
+
+	import android.content.Context;
+	import android.support.v7.app.AppCompatActivity;
+	import android.os.Bundle;
+	import android.view.View;
+	import android.widget.Button;
+	import android.widget.EditText;
+	import android.widget.Toast;
+
+	import java.io.IOException;
+
+	public class MainActivity extends AppCompatActivity implements View.OnClickListener{
+
+    private EditText et_filename;
+    private EditText et_filecontent;
+    private Button btn_save;
+    private Button btn_clean;
+    private Button btn_read;
+    private Context mContext;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        mContext = getApplicationContext();
+
+        bindViews();
+
+    }
+
+    private void bindViews() {
+        et_filename = (EditText) findViewById(R.id.et_filename);
+        et_filecontent = (EditText) findViewById(R.id.et_filecontent);
+        btn_save = (Button) findViewById(R.id.btn_save);
+        btn_clean = (Button) findViewById(R.id.btn_clean);
+        btn_read = (Button) findViewById(R.id.btn_read);
+
+        btn_save.setOnClickListener(this);
+        btn_clean.setOnClickListener(this);
+        btn_read.setOnClickListener(this);
+
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.btn_clean:
+                et_filename.setText("");
+                et_filecontent.setText("");
+                break;
+            case R.id.btn_save:
+                FileHelper fileHelper = new FileHelper(mContext);
+                String filename = et_filename.getText().toString();
+                String filecontent = et_filecontent.getText().toString();
+
+                try {
+                    fileHelper.save(filename,filecontent);
+                    Toast.makeText(MainActivity.this,"数据写入成功",Toast.LENGTH_SHORT).show();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Toast.makeText(MainActivity.this,"数据写入失败",Toast.LENGTH_SHORT).show();
+                }
+                break;
+            case R.id.btn_read:
+                String detail = "";
+                FileHelper fHelper2 = new FileHelper(getApplicationContext());
+                try {
+                    String fname = et_filename.getText().toString();
+                    detail = fHelper2.read(fname);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                Toast.makeText(getApplicationContext(), detail, Toast.LENGTH_SHORT).show();
+                break;
+        }
+    }
+	}
 
 
+2、存储到SD卡，效果图如下
+
+![](http://i.imgur.com/TdR95Hk.png)
 
 
+activity_mian.xml
+
+	`<?xml version="1.0" encoding="utf-8"?>
+	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"   tools:context="zzu.com.sdwenjianduxie.MainActivity">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="请输入文件名" />
+
+    <EditText
+        android:id="@+id/et_filename"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="请输入文件内容" />
+
+    <EditText
+        android:id="@+id/et_filecontent"
+        android:lines="3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        >
+        <Button
+            android:id="@+id/btn_save"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="保存到SD卡"
+            />
+        <Button
+            android:id="@+id/btn_clean"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="清空"
+            />
+
+        <Button
+            android:id="@+id/btn_read"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="读取SD卡的文件"
+            />
+
+    </LinearLayout>
+	</LinearLayout>
+
+`
+SDFileHelper.java
+
+	package zzu.com.sdwenjianduxie;
+
+	import android.content.Context;
+	import android.os.Environment;
+	import android.widget.Toast;
+
+	import java.io.FileInputStream;
+	import java.io.FileOutputStream;
+	import java.io.IOException;
+
+	/**
+ 	* Created by xm on 2016/6/1.
+ 	*/
+	public class SDFileHelper {
+    private Context context;
+
+    public SDFileHelper() {
+    }
+
+    public SDFileHelper(Context context) {
+        this.context = context;
+    }
+    //往SD卡写入文件的方法
+    public void saveFileToSD(String filename,String filecontent) throws IOException {
+        //如果手机已经插入了sd卡，并且这个APP具有读写sd卡的权限
+        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
+                filename = Environment.getExternalStorageDirectory().getCanonicalPath() + "/" + filename;
+                //这里就不要用openFileOutput了，那个是往手机内存中进行存储
+                FileOutputStream outputStream = new FileOutputStream(filename);
+                //将String字符串以字节流的形式写入到输出流中
+                outputStream.write(filecontent.getBytes());
+                //关闭这个输出流
+                outputStream.close();
+        }else{
+            Toast.makeText(context,"sd卡不存在或者不可读写",Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    //读取SD卡中文件的方法
+    //定义读取文件的方法
+    public String readFromSD(String filename) throws IOException {
+        StringBuffer sb = new StringBuffer("");
+        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
+            filename = Environment.getExternalStorageDirectory().getCanonicalPath() + "/" + filename;
+            //打开文件输入流
+            FileInputStream inputStream = new FileInputStream(filename);
+            byte[] temp = new byte[1024];
+            int len = 0;
+            //读取内容
+            while ((len = inputStream.read(temp)) > 0){
+                sb.append(new String(temp, 0, len));
+            }
+            //关闭输入流
+            inputStream.close();
+        }
+        return sb.toString();
+    }
+	}
+
+MainActivity.java
+
+	package zzu.com.sdwenjianduxie;
+
+	import android.content.Context;
+	import android.support.v7.app.AppCompatActivity;
+	import android.os.Bundle;
+	import android.view.View;
+	import android.widget.Button;
+	import android.widget.EditText;
+	import android.widget.Toast;
+
+	import java.io.IOException;
+
+	public class MainActivity extends AppCompatActivity implements View.OnClickListener{
+
+    private EditText et_filename;
+    private EditText et_filecontent;
+    private Button btn_save;
+    private Button btn_clean;
+    private Button btn_read;
+    private Context mContext;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        mContext = getApplicationContext();
+
+        bindViews();
+
+    }
+
+    private void bindViews() {
+        et_filename = (EditText) findViewById(R.id.et_filename);
+        et_filecontent = (EditText) findViewById(R.id.et_filecontent);
+        btn_save = (Button) findViewById(R.id.btn_save);
+        btn_clean = (Button) findViewById(R.id.btn_clean);
+        btn_read = (Button) findViewById(R.id.btn_read);
+
+        btn_save.setOnClickListener(this);
+        btn_clean.setOnClickListener(this);
+        btn_read.setOnClickListener(this);
+
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.btn_clean:
+                et_filename.setText("");
+                et_filecontent.setText("");
+                break;
+            case R.id.btn_save:
+                String filename = et_filename.getText().toString();
+                String filecontent = et_filecontent.getText().toString();
+                SDFileHelper sdFileHelper = new SDFileHelper(mContext);
+                try {
+                    sdFileHelper.saveFileToSD(filename,filecontent);
+                    Toast.makeText(getApplicationContext(),"写入数据成功",Toast.LENGTH_SHORT).show();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    Toast.makeText(getApplicationContext(), "数据写入失败", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            case R.id.btn_read:
+                String content = "";
+                SDFileHelper sdFileHelper1 = new SDFileHelper(mContext);
+
+                try {
+                    String filename1 = et_filename.getText().toString();
+                    content = sdFileHelper1.readFromSD(filename1);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                Toast.makeText(getApplicationContext(), content, Toast.LENGTH_SHORT).show();
+                break;
+
+        }
+    }
+	}
+
+
+写完这些，记得加上权限
+
+	 <!-- 在SDCard中创建与删除文件权限 -->
+    <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"/>
+    <!-- 往SDCard写入数据权限 -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
 
 
