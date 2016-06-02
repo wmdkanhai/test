@@ -1037,7 +1037,10 @@ MainActivity.java
 
 
 
-2、SharedPreferences
+###SharedPreferences
+
+
+1、SharedPreferences
 
 什么时候要用这个东西呢？
 当我们的应用想要保存用户的一些偏好参数，比如：自动登录。是否记住密码，是否在Wifi下才能联网等相关信息，把这些配置信息称为用户的偏好设置。windows使用ini文件，J2SE中使用properties属性文件与xml文件来保存软件的配置信息。
@@ -1168,7 +1171,7 @@ MainActivity.java
 
 主要是学习大神们的代码规范，少年，努力吧！！！
 
-3、MD5
+2、MD5
 
 1)Message Digest Algorithm MD5（中文名字为消息摘要算法第5版），为计算机安全领域广泛使用的一种散列函数，用于提供消息的完整性保护
 
@@ -1179,7 +1182,7 @@ MD5在线解密，[http://www.cmd5.com/](http://www.cmd5.com/)。。
 你对文件进行1次加密，人家很容易给你破解，那你就对文件进行100次加密，，，，，，
 
 
-4、工具类
+3、工具类
 
 保存一个SharedPreferences工具类，工具类来源于鸿洋大神的blog~
 
@@ -1274,8 +1277,60 @@ MD5在线解密，[http://www.cmd5.com/](http://www.cmd5.com/)。。
 	}
 
 
-	
+###SQLite数据库
 
+####1、基本概念
+
+1、简单了解
+
+这是记录的Android数据存储与访问的第三种方式，SQLite数据库，下边大致了解下SQLite：
+
+SQLite是一个轻量级的关系型数据库，运算速度快，占用资源少，很适合在移动设备上进行使用，
+
+SQLite支持五种数据类型，：：NULL，INTEGER，REAL（浮点型），TEXT（字符串文本），BLOB二进制对象），虽然有5种，但是对于其他类型的，也是可以的，因为SQLite支持，把各种数据类型的数据保存在任何字段中而不用关心字段声明的数据类型。。
+
+2、使用中的3个类
+
+1、SQLiteOpenHelper：抽象类，我们通过继承该类，然后重写数据库创建以及更新的方法， 我们还可以通过该类的对象获得数
+据库实例，或者关闭数据库！
+
+2、SQLiteDatabase：数据库访问类：我们可以通过该类的对象来对数据库做一些增删改查的操作
+
+3、Cursor：游标，有点类似于JDBC里的resultset，结果集！可以简单理解为指向数据库中某 
+一个记录的指针
+
+
+####2、使用SQLiteOpenHelper类创建数据库与版本管理
+
+提供了SQLiteOpenHelper的两个方法, onCreate( )与onUpgrade( )来实现。。
+
+直接上代码：
+
+	public class MyDBOpenHelper extends SQLiteOpenHelper {
+    public MyDBOpenHelper(Context context, String name, CursorFactory factory,
+            int version) {super(context, "my.db", null, 1); }
+    @Override
+    //数据库第一次创建时被调用
+    public void onCreate(SQLiteDatabase db) {
+        db.execSQL("CREATE TABLE person(personid INTEGER PRIMARY KEY AUTOINCREMENT,name VARCHAR(20))");
+
+    }
+    //软件版本号发生改变时调用
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        db.execSQL("ALTER TABLE person ADD phone VARCHAR(12) NULL");
+    }
+	}
+
+流程：
+	
+- 1：自定义一个类继承SQLiteOpenHelper类
+- 2：在该类的构造方法的super方法中设置好要创建的数据库名，版本号
+- 3：重写onCreate()方法创建数据表结构
+- 4：重写onUpgrade()方法定义版本号发生改变后执行的操作
+
+
+####3、使用Android提供的API操作数据库
 
 
 
