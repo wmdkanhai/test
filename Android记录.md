@@ -1033,9 +1033,248 @@ MainActivity.java
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
 
+对文件的读写，最重要的就是我们的那个辅助类，让我们的操作变得简单，，，，
 
 
 
+2、SharedPreferences
+
+什么时候要用这个东西呢？
+当我们的应用想要保存用户的一些偏好参数，比如：自动登录。是否记住密码，是否在Wifi下才能联网等相关信息，把这些配置信息称为用户的偏好设置。windows使用ini文件，J2SE中使用properties属性文件与xml文件来保存软件的配置信息。
+
+自我感觉，SharedPreferences用的还是比较多的，实现一个小的案例：在一个页面上进行信息的填写，然后点击注册，就把信息写入，下次进入软件就可以回显信息
+
+
+![](http://i.imgur.com/zR2ZuB2.png)
+
+直接上代码，主要的是看人家怎么写的，，，，
+
+activity_main.xml,就不贴了，就是一个布局文件，两个EditText,一个Button,,,
+
+SharedHelper.java
+
+	package zzu.com.sharedpreference;
+
+	import android.content.Context;
+	import android.content.SharedPreferences;
+	import android.widget.Toast;
+
+	import java.util.HashMap;
+	import java.util.Map;
+
+	public class SharedHelper {
+
+    private Context mContext;
+
+    public SharedHelper(Context mContext) {
+        this.mContext = mContext;
+    }
+
+    //定义一个保存数据的方法
+    public void save(String name, String password){
+        //getSharedPreferences()方法，获得SharedPreferences对象，传2个参数：文件名和操作模式
+        SharedPreferences sharedPreferences = mContext.getSharedPreferences("mysp",Context.MODE_PRIVATE);
+        ///获得Editor对象
+        SharedPreferences.Editor editor =sharedPreferences.edit();
+        //调用Editor对象的putXxx(),将不同类型的数据进行写入，参数是键值对的形式！！！
+        editor.putString("name",name);
+        editor.putString("password",password);
+        //提交数据
+        editor.commit();
+        Toast.makeText(mContext,"信息已经被写入",Toast.LENGTH_SHORT).show();
+    }
+
+    public Map<String, String> read(){
+        Map<String, String> data = new HashMap<>();
+        SharedPreferences sharedPreferences = mContext.getSharedPreferences("mysp",Context.MODE_PRIVATE);
+        data.put("name",sharedPreferences.getString("name",""));
+        data.put("password",sharedPreferences.getString("password",""));
+        return data;
+    }
+	}
+
+
+辅助类中有2个方法，一个是文件的写入，一个是文件的读取。。
+
+MainActivity.java
+
+	package zzu.com.sharedpreference;
+
+
+	/*
+		* 这个案例是实现SharedPreference,进行对密码的保存和读取
+		* 这个页面中有注册。然后要是有信息就回显，要是没有就不回显，可以注册
+		*
+		* */
+	import android.support.v7.app.AppCompatActivity;
+	import android.os.Bundle;
+	import android.view.View;
+	import android.widget.Button;
+	import android.widget.EditText;
+
+	import java.util.Map;
+
+	public class MainActivity extends AppCompatActivity {
+
+    private EditText et_name;
+    private EditText et_pass;
+    private Button bt_register;
+    private SharedHelper sharedHelper;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        sharedHelper = new SharedHelper(this);
+        init();
+    }
+
+    private void init() {
+        et_name = (EditText) findViewById(R.id.et_name);
+        et_pass = (EditText) findViewById(R.id.et_pass);
+
+
+        bt_register = (Button) findViewById(R.id.bt_register);
+        bt_register.setOnClickListener(new View.OnClickListener() {
+
+            private String name;
+            private String pass;
+
+            @Override
+            public void onClick(View v) {
+                name = et_name.getText().toString();
+                pass = et_pass.getText().toString();
+
+                sharedHelper.save(name,pass);
+
+            }
+        });
+
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Map<String,String> data = sharedHelper.read();
+        et_name.setText(data.get("name"));
+        et_pass.setText(data.get("password"));
+    }
+
+	}
+
+
+把读取数据写到onStart()方法中，在下次进入应用后就直接进行回显
+
+主要是学习大神们的代码规范，少年，努力吧！！！
+
+3、MD5
+
+1)Message Digest Algorithm MD5（中文名字为消息摘要算法第5版），为计算机安全领域广泛使用的一种散列函数，用于提供消息的完整性保护
+
+也就是说，它就是一种加密算法，可以将一个字符串，或者是一个文件，压缩包，执行MD5加密后，就可以产生一个固定长度的128bit的串，一个十六进制需要4个bit来表示，那么MD5的字符串长度就为128/4=32位，要是有的MD5是16位的，那是把32的去掉了前8位，后8位，
+
+MD5在线解密，[http://www.cmd5.com/](http://www.cmd5.com/)。。
+
+你对文件进行1次加密，人家很容易给你破解，那你就对文件进行100次加密，，，，，，
+
+
+4、工具类
+
+保存一个SharedPreferences工具类，工具类来源于鸿洋大神的blog~
+
+	import android.content.Context;
+	import android.content.SharedPreferences;
+	import java.util.Map;
+
+	public class SPUtils {
+    /**
+     * 保存在手机里的SP文件名
+     */
+    public static final String FILE_NAME = "my_sp";
+
+    /**
+     * 保存数据
+     */
+    public static void put(Context context, String key, Object obj) {
+        SharedPreferences sp = context.getSharedPreferences(FILE_NAME, context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sp.edit();
+        if (obj instanceof Boolean) {
+            editor.putBoolean(key, (Boolean) obj);
+        } else if (obj instanceof Float) {
+            editor.putFloat(key, (Float) obj);
+        } else if (obj instanceof Integer) {
+            editor.putInt(key, (Integer) obj);
+        } else if (obj instanceof Long) {
+            editor.putLong(key, (Long) obj);
+        } else {
+            editor.putString(key, (String) obj);
+        }
+        editor.commit();
+    }
+
+
+    /**
+     * 获取指定数据
+     */
+    public static Object get(Context context, String key, Object defaultObj) {
+        SharedPreferences sp = context.getSharedPreferences(FILE_NAME, context.MODE_PRIVATE);
+        if (defaultObj instanceof Boolean) {
+            return sp.getBoolean(key, (Boolean) defaultObj);
+        } else if (defaultObj instanceof Float) {
+            return sp.getFloat(key, (Float) defaultObj);
+        } else if (defaultObj instanceof Integer) {
+            return sp.getInt(key, (Integer) defaultObj);
+        } else if (defaultObj instanceof Long) {
+            return sp.getLong(key, (Long) defaultObj);
+        } else if (defaultObj instanceof String) {
+            return sp.getString(key, (String) defaultObj);
+        }
+        return null;
+    }
+
+    /**
+     * 删除指定数据
+     */
+    public static void remove(Context context, String key) {
+        SharedPreferences sp = context.getSharedPreferences(FILE_NAME, context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sp.edit();
+        editor.remove(key);
+        editor.commit();
+    }
+
+
+    /**
+     * 返回所有键值对
+     */
+    public static Map<String, ?> getAll(Context context) {
+        SharedPreferences sp = context.getSharedPreferences(FILE_NAME, context.MODE_PRIVATE);
+        Map<String, ?> map = sp.getAll();
+        return map;
+    }
+
+    /**
+     * 删除所有数据
+     */
+    public static void clear(Context context) {
+        SharedPreferences sp = context.getSharedPreferences(FILE_NAME, context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sp.edit();
+        editor.clear();
+        editor.commit();
+    }
+
+    /**
+     * 检查key对应的数据是否存在
+     */
+    public static boolean contains(Context context, String key) {
+        SharedPreferences sp = context.getSharedPreferences(FILE_NAME, context.MODE_PRIVATE);
+        return sp.contains(key);
+    }
+
+	}
+
+
+	
 
 
 
