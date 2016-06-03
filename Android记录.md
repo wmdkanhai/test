@@ -1331,29 +1331,233 @@ SQLite支持五种数据类型，：：NULL，INTEGER，REAL（浮点型），TE
 
 
 ####3、使用Android提供的API操作数据库
+![](http://i.imgur.com/y3x8AGa.png)
+
+main_activity.xml
+
+	<?xml version="1.0" encoding="utf-8"?>
+	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:orientation="vertical"
+    tools:context="zzu.com.sqlitetest.MainActivity">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="SQLite的操作" />
+    <Button
+        android:id="@+id/btn_insert"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="插入一条数据"
+        />
+
+    <Button
+        android:id="@+id/btn_query"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="查询数据库"
+        />
+    <Button
+        android:id="@+id/btn_updata"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="修改数据"
+
+        />
+    <Button
+        android:id="@+id/btn_delete"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="删除一条数据"
+        />
+	</LinearLayout>
+
+
+MainActivity.java
+
+	package zzu.com.sqlitetest;
+
+	import android.content.ContentValues;
+	import android.database.Cursor;
+	import android.database.sqlite.SQLiteDatabase;
+	import android.support.v7.app.AppCompatActivity;
+	import android.os.Bundle;
+	import android.view.View;
+	import android.widget.Button;
+	import android.widget.Toast;
+
+	public class MainActivity extends AppCompatActivity implements View.OnClickListener{
+
+    private Button btn_insert;
+    private Button btn_query;
+    private Button btn_delete;
+    private Button btn_updata;
+    private MyDBOpenHelper myDBOpenHelper;
+
+    private StringBuilder sb;
+    private int i = 1;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        myDBOpenHelper = new MyDBOpenHelper(MainActivity.this,"my.db",null,1);
+
+        bindViews();
+    }
+
+    private void bindViews() {
+        btn_insert = (Button) findViewById(R.id.btn_insert);
+        btn_query = (Button) findViewById(R.id.btn_query);
+        btn_delete = (Button) findViewById(R.id.btn_delete);
+        btn_updata = (Button) findViewById(R.id.btn_updata);
+
+        btn_insert.setOnClickListener(this);
+        btn_query.setOnClickListener(this);
+        btn_delete.setOnClickListener(this);
+        btn_updata.setOnClickListener(this);
+
+    }
+
+    @Override
+    public void onClick(View v) {
+        SQLiteDatabase db = myDBOpenHelper.getWritableDatabase();
+        switch (v.getId()){
+            case R.id.btn_insert:
+                ContentValues values1 = new ContentValues();
+                values1.put("name", "呵呵~" + i);
+                values1.put("phone",i+i+i);
+                i++;
+                //参数依次是：表名，强行插入null值得数据列的列名，一行记录的数据
+                db.insert("person", null, values1);
+                Toast.makeText(MainActivity.this, "插入完毕~", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.btn_query:
+                sb = new StringBuilder();
+                //参数依次是:表名，列名，where约束条件，where中占位符提供具体的值，指定group by的列，进一步约束
+                //指定查询结果的排序方式
+                Cursor cursor = db.query("person", null, null, null, null, null, null);
+                if (cursor.moveToFirst()) {
+                    do {
+                        int pid = cursor.getInt(cursor.getColumnIndex("_id"));
+                        String name = cursor.getString(cursor.getColumnIndex("name"));
+                        sb.append("_id：" + pid + "：" + name + "\n");
+                    } while (cursor.moveToNext());
+                }
+                cursor.close();
+                Toast.makeText(MainActivity.this, sb.toString(), Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.btn_updata:
+                ContentValues values2 = new ContentValues();
+                values2.put("name", "嘻嘻~");
+                //参数依次是表名，修改后的值，where条件，以及约束，如果不指定三四两个参数，会更改所有行
+                db.update("person", values2, "name = ?", new String[]{"呵呵~2"});
+                break;
+            case R.id.btn_delete:
+                //参数依次是表名，以及where条件与约束
+                db.delete("person", "_id = ?", new String[]{"3"});
+                break;
+        }
+    }
+	}
 
 
 
+上边是使用Android给我们提供的操作数据库的API方法，只是一个简单的例子。
+
+
+####4、使用SQLite语句操作数据库
+
+1）插入数据：
+
+	public void save(Person p){
+    SQLiteDatabase db = dbOpenHelper.getWritableDatabase();
+    db.execSQL("INSERT INTO person(name,phone) values(?,?)",
+                new String[]{p.getName(),p.getPhone()});
+	}
 
 
 
+2）删除数据
+
+	public void delete(Integer id){
+    SQLiteDatabase db = dbOpenHelper.getWritableDatabase();
+    db.execSQL("DELETE FROM person WHERE personid = ?",
+                new String[]{id});
+	}
 
 
 
+3）修改数据
+
+	public void update(Person p){
+    SQLiteDatabase db = dbOpenHelper.getWritableDatabase();
+    db.execSQL("UPDATE person SET name = ?,phone = ? WHERE personid = ?",
+        new String[]{p.getName(),p.getPhone(),p.getId()});
+	}
+
+
+4）查询数据
+
+	public Person find(Integer id){
+    SQLiteDatabase db = dbOpenHelper.getReadableDatabase();
+    Cursor cursor =  db.rawQuery("SELECT * FROM person WHERE personid = ?",
+            new String[]{id.toString()});
+    //存在数据才返回true
+    if(cursor.moveToFirst())
+    {
+        int personid = cursor.getInt(cursor.getColumnIndex("personid"));
+        String name = cursor.getString(cursor.getColumnIndex("name"));
+        String phone = cursor.getString(cursor.getColumnIndex("phone"));
+        return new Person(personid,name,phone);
+    }
+    cursor.close();
+    return null;
+	}
+
+
+5）数据分页
+	
+	public List<Person> getScrollData(int offset,int maxResult){
+    List<Person> person = new ArrayList<Person>();
+    SQLiteDatabase db = dbOpenHelper.getReadableDatabase();
+    Cursor cursor =  db.rawQuery("SELECT * FROM person ORDER BY personid ASC LIMIT= ?,?",
+        new String[]{String.valueOf(offset),String.valueOf(maxResult)});
+    while(cursor.moveToNext())
+    {
+        int personid = cursor.getInt(cursor.getColumnIndex("personid"));
+        String name = cursor.getString(cursor.getColumnIndex("name"));
+        String phone = cursor.getString(cursor.getColumnIndex("phone"));
+        person.add(new Person(personid,name,phone)) ;
+    }
+    cursor.close();
+    return person;
+	}
+	
+
+
+6）查询记录数
+
+	public long getCount(){
+    SQLiteDatabase db = dbOpenHelper.getReadableDatabase();
+    Cursor cursor =  db.rawQuery("SELECT COUNT (*) FROM person",null);
+    cursor.moveToFirst();
+    long result = cursor.getLong(0);
+    cursor.close();
+    return result;      
+	}   
 
 
 
-
-
-
-
-
-
-
-
-
-
-
+----
 
 
 
