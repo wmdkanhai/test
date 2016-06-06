@@ -274,6 +274,115 @@ sp: scaled pixels(放大像素). 主要用于字体显示best for textsize。也
         android:text="ghfgfgrhrhrehehddgdhdfhdhhhahahhahahahah呵呵呵呵呵呵~"/>
 
 
+###5.2、EditText的一些用法
+
+1、实现EditText的密码可见与不可见
+
+
+
+直接上代码：
+activity_main.xml
+
+	<?xml version="1.0" encoding="utf-8"?>
+	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:orientation="horizontal"
+    tools:context="zzu.com.myapplication.MainActivity">
+
+    <EditText
+        android:id="@+id/edit_password"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_weight="2"
+        android:inputType="textPassword"
+        android:background="@drawable/editborder"
+        />
+    <Button
+        android:id="@+id/btn_change"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_weight="1"
+        android:text="密码可见" />
+	</LinearLayout>
+
+
+editborder.xml
+
+	<?xml version="1.0" encoding="utf-8"?>
+	<shape xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <!-- 设置透明背景色 -->
+    <solid android:color="#FFFFFF" />
+
+    <!-- 设置一个白色边框 -->
+    <stroke
+        android:width="1px"
+        android:color="#FFFFFF" />
+    <!-- 设置一下边距,让空间大一点 -->
+    <padding
+        android:bottom="5dp"
+        android:left="5dp"
+        android:right="5dp"
+        android:top="5dp" />
+
+	</shape>
+
+MainActivity.java
+
+	package zzu.com.myapplication;
+
+	import android.support.v7.app.AppCompatActivity;
+	import android.os.Bundle;
+	import android.text.method.HideReturnsTransformationMethod;
+	import android.text.method.PasswordTransformationMethod;
+	import android.view.View;
+	import android.widget.Button;
+	import android.widget.EditText;
+
+	public class MainActivity extends AppCompatActivity {
+
+    private EditText et_password;
+    private Button btn_change;
+    private boolean flag = false;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        et_password = (EditText) findViewById(R.id.edit_password);
+        btn_change = (Button) findViewById(R.id.btn_change);
+
+        et_password.setHorizontallyScrolling(true);//设置EditText不换行
+        btn_change.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (flag == true){
+                    et_password.setTransformationMethod(HideReturnsTransformationMethod.getInstance());
+                    flag = false;
+                    btn_change.setText("密码不可见");
+                }else{
+                    et_password.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                    flag = true;
+                    btn_change.setText("密码可见");
+                }
+            }
+        });
+
+
+    }
+	}
+
+
+
+
+
+	
 
 
 ##6、基于监听的事件处理机制
@@ -447,7 +556,141 @@ protected void onFocusChanged(boolean gainFocus, int direction, Rect previously 
 
 ----
 ##7、Handler消息传递机制
-其实我以前刚开始学习的时候全部都放在主Activity中，但是，这样很容易出现问题的，后来才知道，原来不允许我们在UI外操作UI；然后我们就需要做页面刷新的时候通过Handler来通知UI组件更新
+其实我以前刚开始学习的时候全部都放在主Activity中，但是，这样很容易出现问题的，后来才知道，原来不允许我们在UI外操作UI；然后我们就需要做页面刷新的时候通过Handler来通知UI组件更新。
+
+也就是说：主线程创建的时候，系统就会同时创建消息队列对象MessageQueue，和消息轮询器对象Looper。
+
+Looper的作用是：不停的检测消息队列中是否有消息Message，，消息队列中一旦有消息，Looper就会把消息对象传给消息处理器Handler,这时候消息处理器就用调用HandlerMessage方法来处理这条消息，HandlerMessage运行在主线程中，所以可以刷新UI
+
+
+
+上代码：实验实现从本地的TomCat上下载一张图片，然后显示在页面上。
+
+
+	package com.example.xm.imageview;
+
+	import android.graphics.Bitmap;
+	import android.graphics.BitmapFactory;
+	import android.os.Handler;
+	import android.os.Message;
+	import android.support.v7.app.AppCompatActivity;
+	import android.os.Bundle;
+	import android.view.View;
+	import android.widget.ImageView;
+	import android.widget.Toast;
+
+	import java.io.File;
+	import java.io.FileOutputStream;
+	import java.io.InputStream;
+	import java.net.HttpURLConnection;
+	import java.net.URL;
+
+	public class MainActivity extends AppCompatActivity {
+    ImageView iv;
+    Handler handler = new Handler(){
+        //此方法在主线程中调用，可以用来刷新UI
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what){
+                case 1:
+                    //把位图对象显示在imageview
+                    iv.setImageBitmap((Bitmap) msg.obj);
+                    break;
+                case 0:
+                    Toast.makeText(MainActivity.this,"请求失败",Toast.LENGTH_LONG).show();
+                    break;
+            }
+        }
+    };
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        iv = (ImageView) findViewById(R.id.iv);
+    }
+	public void click(View view){
+        //下载图片
+        /*
+        1，确定网站，1，确定网站,,原来模拟器默认把127.0.0.1和localhost当做本身了，
+        在模拟器上可以用10.0.2.2代替127.0.0.1和localhost，另外如果是在局域网环境可以用
+         192.168.0.x或者192.168.1.x(根据具体配置)连接本机,这样应该就不会报错了
+        */
+        final String path = "http://10.0.2.2:8080/liu.png";
+
+        final File file = new File(getCacheDir(),getFileName(path));
+
+        //判断缓存中是否存在
+        if (file.exists()){
+            //如果缓存中存在，就从缓存中取
+            System.out.println("从缓存中取出");
+            Bitmap bm = BitmapFactory.decodeFile(file.getAbsolutePath());
+            iv.setImageBitmap(bm);
+
+        }else{
+            //如果缓存不存在，就从网上下载
+            System.out.println("从网上下载");
+            Thread t = new Thread(){
+                @Override
+                public void run() {
+                    try {
+                        //2，把网址封装成一个url对象
+                        URL url = new URL(path);
+                        //3,获取客户端和服务端的连接对象，此时ahi没有建立连接
+                        HttpURLConnection connection =(HttpURLConnection) url.openConnection();
+                        //4，对连接进行初始化
+                        //设置请求方法，注意是大写
+                        connection.setRequestMethod("GET");
+                        //设置连接超时
+                        connection.setConnectTimeout(5000);
+                        //设置读取超时
+                        connection.setReadTimeout(5000);
+                        //5，发送请求，与服务器建立连接
+                        connection.connect();
+                        //如果响应码是200，说明请求成功
+                        if (connection.getResponseCode() == 200){
+                            //获取服务器响应头中的流，流中的数据就是客户端请求的数据
+                            InputStream is = connection.getInputStream();
+
+                            //读取服务器返回流中的数据，然后写入到本地的文件中，缓存起来
+                            FileOutputStream fos = new FileOutputStream(file);
+                            byte [] b = new byte[10024];
+                            int len = 0;
+                            while ((len = is.read(b)) != -1){
+                                fos.write(b,0,len);
+                            }
+                            fos.close();
+
+                            //读取出流中的数据，并构成位图
+                            //Bitmap bm = BitmapFactory.decodeStream(is);
+                            Bitmap bm = BitmapFactory.decodeFile(file.getAbsolutePath());
+
+
+                            Message message = new Message();
+                            //消息对象可以携带数据，这里把bm放在message.obj中
+                            message.obj = bm;
+                            //把消息发送至主线程的消息队列中
+                            message.what =1;
+                            handler.sendMessage(message);
+                        }else {
+                            Message message = handler.obtainMessage();
+                            message.what = 0;
+                            handler.sendMessage(message);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
+            t.start();
+
+        }
+
+    }
+
+
+
+
 
 ----
 ##8、Adapter
@@ -595,6 +838,8 @@ MainActivity.java
 3、自定义BaseAdapter，然后绑定到ListView的简单的例子
 
 先不写了，！！
+
+
 
 
 
