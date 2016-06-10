@@ -2184,19 +2184,363 @@ menu.menus.xml
 
 
 
+###3、HttpClient
+
+已经被弃用了，现在先不看啦！！！
+
+
+###4、Android XML数据解析
+
+1、3种方法解析XML：
+
+![](http://i.imgur.com/RP0gmYs.png)
+
+使用最多的也就是Pull来解析XML文件
+
+
+一个实例，写一个新闻客户端，从服务端请求数据，数据是xml文件，使用pull对文件进行解析。
+
+
+效果图入下：
+
+![](http://i.imgur.com/qDLDU9Y.png)
+
+activity_main.xml
+
+	<?xml version="1.0" encoding="utf-8"?>
+	<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="zzu.com.news.MainActivity">
+
+    <ListView
+        android:id="@+id/lv"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        />
+	</RelativeLayout>
+
+主布局就包含一个listview..
+
+list_item.xml
+	
+	<?xml version="1.0" encoding="utf-8"?>
+	<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content" >
+
+	<--这是一个第三方的jar,SmartImageView-->
+    <zzu.com.news.com.loopj.android.image.SmartImageView
+        android:id="@+id/iv"
+        android:layout_width="90dp"
+        android:layout_height="80dp"
+        android:src="@drawable/mishu"
+        android:layout_centerVertical="true"
+        />
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="这是大标题志哥教你上塑料adasfsadfdsfdsgsd"
+        android:layout_toRightOf="@id/iv"
+        android:textSize="22sp"
+        android:singleLine="true"
+        />
+    <TextView
+        android:id="@+id/tv_detail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="这是正文志哥教你带崩三路adasfsadasdasdasdasidhsakjhdkjashdkjahskjdhsakjdfdsfdsgsd"
+        android:layout_toRightOf="@id/iv"
+        android:layout_below="@id/tv_title"
+        android:textSize="15sp"
+        android:textColor="@android:color/darker_gray"
+        android:lines="2"
+        />
+    <TextView
+        android:id="@+id/tv_comment"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="65031条评论"
+        android:textColor="#ff0000"
+        android:layout_alignParentRight="true"
+        android:layout_below="@id/tv_detail"
+        />
+	</RelativeLayout>
+	
+
+News.java
+
+	package zzu.com.news.bean;
+
+	public class News {
+    private String title;
+    private String detail;
+    private String comment;
+    private String imageUrl;
+
+    @Override
+    public String toString() {
+        return "News{" +
+                "title='" + title + '\'' +
+                ", detail='" + detail + '\'' +
+                ", comment='" + comment + '\'' +
+                ", imageUrl='" + imageUrl + '\'' +
+                '}';
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getDetail() {
+        return detail;
+    }
+
+    public void setDetail(String detail) {
+        this.detail = detail;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+	}
+
+	
+MainActivity.java
+	
+	package zzu.com.news;
+
+	import android.os.Handler;
+	import android.os.Message;
+	import android.support.v7.app.AppCompatActivity;
+	import android.os.Bundle;
+	import android.util.Xml;
+	import android.view.View;
+	import android.view.ViewGroup;
+	import android.widget.BaseAdapter;
+	import android.widget.ListView;
+	import android.widget.TextView;
+
+	import org.xmlpull.v1.XmlPullParser;
+	import org.xmlpull.v1.XmlPullParserException;
+
+	import java.io.InputStream;
+	import java.net.HttpURLConnection;
+	import java.net.MalformedURLException;
+	import java.net.URL;
+	import java.util.ArrayList;
+	import java.util.List;
+
+	import zzu.com.news.bean.News;
+	import zzu.com.news.com.loopj.android.image.SmartImage;
+	import zzu.com.news.com.loopj.android.image.SmartImageView;
+
+	public class MainActivity extends AppCompatActivity {
+
+    List<News> newsList;
+    Handler handler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+
+            ListView lv = (ListView) findViewById(R.id.lv);
+            //要保证在设置适配器时，已经解析完
+            lv.setAdapter(new MyAdapter());
+        }
+    };
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        getNewsInfo();
+	//        ListView lv = (ListView) findViewById(R.id.lv);
+	//        //要保证在设置适配器时，已经解析完
+	//        lv.setAdapter(new MyAdapter());
+    }
+
+    class MyAdapter extends BaseAdapter{
+
+        //得到模型层中元素的数量，用来确定listView需要多少条目
+        @Override
+        public int getCount() {
+            return newsList.size();
+        }
+
+       //返回一个View对象，作为listView的条目进行显示
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            News news = newsList.get(position);
+
+            View v;
+            ViewHolder myHolder;
+            //优化ListView
+            if (convertView == null){
+                //进行填充
+                v = View.inflate(MainActivity.this, R.layout.list_item,null);
+
+                //把布局文件中的所有的组件的对象封装至ViewHolder对象中
+                myHolder = new ViewHolder();
+                myHolder.tv_title = (TextView) v.findViewById(R.id.tv_title);
+                myHolder.tv_detail = (TextView) v.findViewById(R.id.tv_detail);
+                myHolder.tv_comment = (TextView) v.findViewById(R.id.tv_comment);
+                myHolder.siv = (SmartImageView) v.findViewById(R.id.iv);
+
+                //把ViewHolder封装到view对象中
+                v.setTag(myHolder);
+
+            }else{
+                v = convertView;
+                myHolder = (ViewHolder) v.getTag();
+            }
 
 
 
+	//            //给3个文本框设置内容
+	//            TextView tv_title = (TextView) v.findViewById(R.id.tv_title);
+	//            tv_title.setText(news.getTitle());
+	//            TextView tv_detail = (TextView) v.findViewById(R.id.tv_detail);
+	//            tv_detail.setText(news.getDetail());
+	//            TextView tv_comment = (TextView) v.findViewById(R.id.tv_comment);
+	//            tv_comment.setText(news.getComment()+ "条评论");
+	//
+	//            //给图片设置内容，这里用的是第三方的框架
+	//            SmartImageView siv = (SmartImageView) v.findViewById(R.id.iv);
+	//            siv.setImageUrl(news.getImageUrl());
+
+            myHolder.tv_title.setText(news.getTitle());
+            myHolder.tv_detail.setText(news.getDetail());
+            myHolder.tv_comment.setText(news.getComment());
+            myHolder.siv.setImageUrl(news.getImageUrl());
+            
+            return v;
+        }
+
+        //对ListView的进一步优化
+
+        class ViewHolder{
+            //条目的布局文件中有什么组件，这里就定义什么属性
+            TextView tv_title;
+            TextView tv_detail;
+            TextView tv_comment;
+            SmartImageView siv;
+        }
+        @Override
+        public Object getItem(int position) {
+            return null;
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return 0;
+        }
+
+    }
 
 
+    //从网上获取信息
+    private void getNewsInfo(){
+        Thread thread = new Thread(){
+            @Override
+            public void run() {
+                String path = "http://10.0.2.2:8080/news.xml";
+                try {
+                    URL url = new URL(path);
+                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                    connection.setRequestMethod("GET");
+                    connection.setConnectTimeout(5000);
+                    connection.setReadTimeout(5000);
+
+                    //发送请求，获取响应码
+                    if (connection.getResponseCode() == 200){
+                        InputStream is = connection.getInputStream();
+
+                        //使用pull解析器来解析这个流
+                        parseNewsXml(is);
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        thread.start();
+    }
+
+    //对XML文件进行解析
+	private void parseNewsXml(InputStream is){
+        XmlPullParser xp = Xml.newPullParser();
+        try {
+            xp.setInput(is,"utf-8");
+
+            //对节点的事件类型进行判断，就可以知道当前节点是什么节点
+            int type = xp.getEventType();
+            News news = null;
+
+            while(type != XmlPullParser.END_DOCUMENT){
+                switch (type){
+                    case XmlPullParser.START_TAG:
+                        if ("newslist".equals(xp.getName())){
+                            newsList = new ArrayList<>();
+
+                        }else if ("news".equals(xp.getName())){
+                            news = new News();
+                        }else if ("title".equals(xp.getName())){
+                            String title = xp.nextText();
+                            news.setTitle(title);
+                        }else if ("detail".equals(xp.getName())){
+                            String detail = xp.nextText();
+                            news.setDetail(detail);
+                        }else if ("comment".equals(xp.getName())){
+                            String comment = xp.nextText();
+                            news.setComment(comment);
+                        }else if ("image".equals(xp.getName())){
+                            String image = xp.nextText();
+                            news.setImageUrl(image);
+                        }
+                        break;
 
 
+                    case XmlPullParser.END_TAG:
+                        if ("news".equals(xp.getName())){
+                            newsList.add(news);
+                        }
+                        break;
+                }
+                //发消息，让主线程设置listview的适配器,如果消息不需要携带数据的话，就发空消息
+                handler.sendEmptyMessage(1);
 
+                //解析当前的节点后，把指针移动至下一个节点，并返回它的事件类型
+                type = xp.next();
+            }
+            for (News news1 : newsList){
+                System.out.println(news1.toString());
+            }
 
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+	}
 
-
-
-
+	
+	
 
 
 
