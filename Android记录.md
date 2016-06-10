@@ -688,14 +688,36 @@ Looper的作用是：不停的检测消息队列中是否有消息Message，，�
 
     }
 
+---
 
+##8、AsyncTask
 
+轻量级的用于处理异步任务的类AsyncTask，继承AsyncTask,然后在类中实现异步操作，将异步执行的进度，反馈给UI线程
+
+###8.1、什么是进程，线程，多线程
+
+- 应用程序（Application）：为了完成特定的任务，用某种语言编写的一组指令集合（一组静态代码）
+- 进程（Process）：运行中的程序，系统调度与资源分配的一个独立单位，操作系统会为每个进程分配一段内存空间，程序的依次动态执行，经过：代码加载---》执行----》执行完毕 
+- 线程（Thread）：比进程更小的执行单元，每个进程可能有多条线程，线程需要放在一个进程中才能执行到，线程是由程序负责管理的，，而进程是由系统进行调度的
+- 多线程概念（Multithreading）：并行地执行多条指令，将CPU的时间片按照调度算法，分配给各个线程，实际是分时执行，只是这个切换的时间很短，用户感觉是同时而已。。。
+
+###8.2 为什么要用:AsyncTask
+
+1、相比Handler而言，AsyncTask显得更加的简单，但是只适合简单的异步操作，，异步用的最多的地方就是网络操作，图片加载，数据传输。但是以后的实际开发，更多的要使用第三方的框架。。。
+
+2、基本结构
+
+AsyncTask是一个抽象类，一般我们会定义一个类来继承AsyncTask，然后重写相关的方法，
+
+![](http://i.imgur.com/I0R1NZR.jpg)
+
+（PS:使用的是小猪的博客上的图片！！）
 
 
 ----
-##8、Adapter
+##9、Adapter
 
-###8.1MVC模式
+###9.1MVC模式
 Model：通常可以理解为数据，负责执行程序的核心运算和判断逻辑，通过view获得用户输入的数据，然后根据从数据库查询相关的信息，最后进行运算和判断，再将得到的结果交给view来显示
 
 View:用户的操作接口，说白了就是GUI，应该使用哪种接口组件，组件间的排列位置和顺序都需要设计
@@ -704,7 +726,7 @@ Controller:控制器，作为model和view之间的枢纽，负责控制程序的
 
 而Adapter就是中间的这个Controller的部分
 
-###8.2
+###9.2
 
 1、了解Adapter的继承关系，
 2、掌握这个几个重要的Adapter
@@ -715,7 +737,7 @@ ArrayAdapter:支持泛型操作，最简单的一个Adapter，只能展示一行
 
 SimpleAdapter:同样具有良好的扩展性的一个Adapter，可以自定义多种效果
 
-###8.3编码
+###9.3编码
 1、ArrayAdapter使用的示例：
 	
 	public class MainActivity extends AppCompatActivity {
@@ -1803,27 +1825,361 @@ MainActivity.java
 
 
 ----
+##网络编程
+
+注意：网络编程要知道的东西：Http协议，使用自带的Json解析类解析Json,XML解析的几种常用的方式，HttpUrlConnection和HttpClient的使用，文件的上传，下载，WebService的使用，WebView，Socket通信
+
+![](http://i.imgur.com/3ODPdLi.png)
 
 
+###1、Http的学习
+1）什么是Http协议：
+
+hypertext transfer protocol（超文本传输协议），TCP/IP协议的一个应用层协议，用于定义WEB浏览器与WEB服务器之间进行交换数据的过程，客户端连上Web服务器后，若想获得web服务器中的某个web资源，需要遵守一定的通讯格式，HTTP协议用于定义客户端与web服务通讯的格式。
+
+2、Http1.0与Http1.1的区别
+
+1.0协议，客户端与web服务器建立连接后，只能获得一个web资源。
+而1.1协议，允许客户端与web服务端建立连接后，在一个连接上获得多个web资源
+
+3、Http协议的底层工作流程
+
+SYN：（synchronous）:TCP／IP建立链接时使用的握手信号
+ACK：（acknowledgement）：确认字符，确认发来的数据已经接受无误
+
+三次握手：，，，
 
 
+4、GET和Post的对比
+
+GET：在请求的URL地址后以　？　的形式带上交给服务器的数据，多个数据之间以 & 进行分割，但是数据容量通常不能超过2K，比如:http://xxx?username=…&pawd=…这种就是GET
+
+POST：这个则可以请求的实体内容中向服务器发送数据，传输没有数量限制，这两个都是发送数据的，只是发送机制不一样，然后还有就是，GET安全性非常低，POST安全性比较高，但是执行效率却比POST方法要好，一般查询我们用的是GET，然后数据增删改的时候用的是POST
 
 
+###2、Android HTTP的请求方式--HttpURLCOnnection
+
+Http的请求方式之一：HttpURLConnection
+
+还有一个是HttpClient，是我们java抓包经常使用到的，然后是Apache的
+
+在实际的开发过程中，我们可能是不用这些东西的，然后使用的是别人封装好的第三方网络请求的框架，例如：Volley，android-async-http，loopj等，因为网络涉及到异步、多线程，自己动手写的话，比较麻烦，然后使用第三方的。但是基础的东西，先学习下吧，哈哈哈哈
+
+1、使用步骤：
 
 
+- 创建一个URL对象
+
+	URL url = new URL(http://www.baidu.com);
+
+- 调用URL对象的openConnection()来获取HttpURLConnection对象实例
+
+	HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+- 设置HTTP请求使用的方法:GET或者POST，或者其他请求方式比如：PUT 
+	
+	conn.setRequestMethod(“GET”);
+- 设置连接超时，读取超时的毫秒数，以及服务器希望得到的一些消息头
+	conn.setConnectTimeout(6*1000); 
+	conn.setReadTimeout(6 * 1000);
+- 调用getInputStream()方法获得服务器返回的输入流，然后输入流进行读取了 
+
+	InputStream in = conn.getInputStream();
+- 最后调用disconnect()方法将HTTP连接关掉 
+	
+	conn.disconnect();
+PS：除了上边的这些，我们还可能需要对响应码进行判断，例如
+
+	if (connection.getResponseCode() == 200){ 
+	}
 
 
+2、使用示例：
+
+StreamTool.java
+
+由于conn.getInputStream获取到的是一个流，所以我们需要些一个类将流转化为二进制数据，工具类如下：
+
+	package zzu.com.httpurlconnection2.Util;
+
+	import java.io.ByteArrayOutputStream;
+	import java.io.IOException;
+	import java.io.InputStream;
+
+	public class StreamTool {
+
+    //从流中读取数据
+    public static byte[] read (InputStream inputStream){
+        //创建字节数组输出流，读取输入流中的文本数据时，同时把数据写入数据输出流
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        byte[] buffer = new byte[1024];
+        int len = 0;
+
+        try {
+            while ((len = inputStream.read(buffer)) != -1){
+                outputStream.write(buffer,0,len);
+            }
+            inputStream.close();
+            return outputStream.toByteArray();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+	}
+
+运行效果图：
+
+![](http://i.imgur.com/KQowK4F.gif)
+
+布局：activity_mian.xml
+
+	<?xml version="1.0" encoding="utf-8"?>
+	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"  tools:context="zzu.com.httpurlconnection2.MainActivity">
+
+    <TextView
+        android:id="@+id/txtMenu"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="#4EA9E9"
+        android:clickable="true"
+        android:gravity="center"
+        android:text="长按我，加载菜单"
+        android:textSize="20sp" />
+
+    <ImageView
+        android:id="@+id/imgPic"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+
+    <ScrollView
+        android:id="@+id/scroll"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/txtshow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </ScrollView>
+
+    <WebView
+        android:id="@+id/webView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+	</LinearLayout>
 
 
+获取数据类：GetData.java
+
+	package zzu.com.httpurlconnection2;
+
+	import java.io.InputStream;
+	import java.net.HttpURLConnection;
+	import java.net.URL;
+	import zzu.com.httpurlconnection2.Util.StreamTool;
+
+	public class GetData {
+
+    //定义一个获取网络图片数据的方法
+    public static byte[] getImage(String path){
+        try {
+            URL url = new URL(path);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(5000);
+
+            //判断请求URL是否成功
+            if(conn.getResponseCode() != 200){
+                throw  new RuntimeException("请求url失败");
+            }
+
+            InputStream inputStream = conn.getInputStream();
+            byte [] bt = StreamTool.read(inputStream);
+            inputStream.close();
+            return bt;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    //获取网页的html的源码
+    public static String getHtml(String path){
+        try {
+            URL url = new URL(path);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(5000);
+            if (conn.getResponseCode() == 200){
+                InputStream inputStream = conn.getInputStream();
+                byte [] data = StreamTool.read(inputStream);
+                String html = new String(data,"UTF-8");
+                return html;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+	}
+
+MainActivity.java
+
+	package zzu.com.httpurlconnection2;
+
+	import android.graphics.Bitmap;
+	import android.graphics.BitmapFactory;
+	import android.os.Handler;
+	import android.support.v7.app.AppCompatActivity;
+	import android.os.Bundle;
+	import android.view.ContextMenu;
+	import android.view.MenuInflater;
+	import android.view.MenuItem;
+	import android.view.View;
+	import android.webkit.WebView;
+	import android.widget.ImageView;
+	import android.widget.ScrollView;
+	import android.widget.TextView;
+	import android.widget.Toast;
+
+	public class MainActivity extends AppCompatActivity {
+
+    private TextView txtMenu;
+    private TextView txtshow;
+    private ImageView imgPic;
+    private WebView webView;
+    private ScrollView scroll;
+    private Bitmap bitmap;
+    private String detail = "";
+
+    private final static String PIC_URL = "http://10.0.2.2:8080/liu.png";
+    private final static String HTML_URL = "http://10.0.2.2:8080/baidu.html";
 
 
+    // 用于刷新界面
+    private Handler handler = new Handler() {
+        public void handleMessage(android.os.Message msg) {
+            switch (msg.what) {
+                case 0x001:
+                    hideAllWidget();
+                    imgPic.setVisibility(View.VISIBLE);
+                    imgPic.setImageBitmap(bitmap);
+                    Toast.makeText(MainActivity.this, "图片加载完毕", Toast.LENGTH_SHORT).show();
+                    break;
+                case 0x002:
+                    hideAllWidget();
+                    scroll.setVisibility(View.VISIBLE);
+                    txtshow.setText(detail);
+                    Toast.makeText(MainActivity.this, "HTML代码加载完毕", Toast.LENGTH_SHORT).show();
+                    break;
+                case 0x003:
+                    hideAllWidget();
+                    webView.setVisibility(View.VISIBLE);
+                    webView.loadDataWithBaseURL("", detail, "text/html", "UTF-8", "");
+                    Toast.makeText(MainActivity.this, "网页加载完毕", Toast.LENGTH_SHORT).show();
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
 
 
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        setView();
+    }
+
+    private void setView() {
+        txtMenu = (TextView) findViewById(R.id.txtMenu);
+        txtshow = (TextView) findViewById(R.id.txtshow);
+        imgPic = (ImageView) findViewById(R.id.imgPic);
+        webView = (WebView) findViewById(R.id.webView);
+        scroll = (ScrollView) findViewById(R.id.scroll);
+        registerForContextMenu(txtMenu);
+
+    }
+
+    //定义一个隐藏所有控件的方法
+    private void hideAllWidget() {
+        imgPic.setVisibility(View.GONE);
+        scroll.setVisibility(View.GONE);
+        webView.setVisibility(View.GONE);
+    }
+
+    //重写上下文菜单的创建方法
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        MenuInflater inflater = new MenuInflater(this);
+        inflater.inflate(R.menu.menus, menu);
+        super.onCreateContextMenu(menu, v, menuInfo);
+    }
+
+    //上下文菜单被点击时触发该方法
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.one:
+                new Thread() {
+                    public void run() {
+                        try {
+                            byte[] data = GetData.getImage(PIC_URL);
+                            bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        handler.sendEmptyMessage(0x001);
+                    }
+                }.start();
+                break;
+
+            case R.id.two:
+                new Thread() {
+                    public void run() {
+                        try {
+                            detail = GetData.getHtml(HTML_URL);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        handler.sendEmptyMessage(0x002);
+                    }
+                }.start();
+                break;
+
+            case R.id.three:
+                if (detail.equals("")) {
+                    Toast.makeText(MainActivity.this, "先请求HTML先嘛~", Toast.LENGTH_SHORT).show();
+                } else {
+                    handler.sendEmptyMessage(0x003);
+                }
+                break;
+
+        }
+        return true;
+    }
+	}
 
 
+menu.menus.xml
 
-
-
+	<?xml version="1.0" encoding="utf-8"?>
+	<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+    <group>  
+       <item android:id="@+id/one" android:title="请求图片"/>
+       <item android:id="@+id/two" android:title="请求HTML代码"/>
+       <item android:id="@+id/three" android:title="将HTML代码加载到WebView"/>
+	</group>  
+	</menu>
 
 
 
