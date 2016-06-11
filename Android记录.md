@@ -2542,15 +2542,38 @@ MainActivity.java
 	
 	
 
+###5、Android JSON数据解析
+
+我们和服务器交互一般用的较多的数据传递方式都是JSON字符串的形式，保存对象，解析JSON一般用的是Gson,Fastjson,jackson..
+
+先学习下android自带的json解析器来解析json..
+
+1、Json与XML的区别：
+
+- JSON和XML的数据可读性基本相同;
+- JSON和XML同样拥有丰富的解析手段
+- JSON相对于XML来讲，数据的体积小
+- JSON与JavaScript的交互更加方便
+- JSON对数据的描述性比XML较差
+- JSON的速度要远远快于XML
+
+简单的说就是：Json的体积小，节省流量，只是不如XML直观，可读性稍差一点而已。
 
 
+2、Json的格式规范
+
+数据在名称/值对中；数据由逗号分隔；花括号保存对象；方括号保存数组； 
+而Json数据的书写格式：名称/值对 比如： “person”：”xiaoming” 
+比如一个简单的Json字符串：
+	
+	[
+    	{ "id":"1","name":"基神","age":"18" },
+    	{ "id":"2","name":"B神","age":"18"  },
+    	{ "id":"3","name":"曹神","age":"18" }
+	]
 
 
-
-
-
-
-
+3、解析Json...
 
 
 
